@@ -379,9 +379,22 @@ void update_shell_speed(struct MarioState *m) {
         m->forwardVel -= 1.0f;
     }
 
+    if (m->actionState == 1) {
+        m->forwardVel -= (f32) m->actionTimer / 10.0f;
+        //increase max speed for the shell dash
+        if (m->forwardVel > 128.0f) { 
+           m->forwardVel = 128.0f;
+       }
+       if (m->forwardVel < 64.0f) { 
+           m->actionState = 0;
+        }
+    }
     //! No backward speed cap (shell hyperspeed)
-    if (m->forwardVel > 64.0f) {
-        m->forwardVel = 64.0f;
+    else {
+        //use vanilla speed
+        if (m->forwardVel > 64.0f) {
+            m->forwardVel = 64.0f;
+        }
     }
 
     m->faceAngle[1] =
@@ -1200,8 +1213,30 @@ s32 act_hold_decelerating(struct MarioState *m) {
 s32 act_riding_shell_ground(struct MarioState *m) {
     s16 startYaw = m->faceAngle[1];
 
+    //transfer the timer from the previous action
+    if (m->actionArg > 0) {
+        m->actionTimer = m->actionArg;
+        m->actionArg = 0;
+    }
+
+    m->actionTimer++;
+
     if (m->input & INPUT_A_PRESSED) {
-        return set_mario_action(m, ACT_RIDING_SHELL_JUMP, 0);
+        return set_mario_action(m, ACT_RIDING_SHELL_JUMP, m->actionTimer);
+    }
+
+    if (m->input & INPUT_B_PRESSED && m->actionState != 1 && m->actionTimer >= 60) {
+        m->particleFlags |= PARTICLE_VERTICAL_STAR;
+        play_sound(SOUND_OBJ_CANNON4, m->marioObj->header.gfx.cameraToObject);
+        set_camera_shake_from_hit(SHAKE_HIT_FROM_BELOW);
+        //make mario go at least max shell speed
+        m->forwardVel *= 2.0f;
+        if (m->forwardVel < 64.0f) {
+            m->forwardVel = 64.0f;
+        }
+        //set state to shell dash, reset timer
+        m->actionState = 1;
+        m->actionTimer = 0;
     }
 
     if (m->input & INPUT_Z_PRESSED) {

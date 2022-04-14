@@ -1699,6 +1699,9 @@ void func_sh_8025574C(void) {
 s32 execute_mario_action(UNUSED struct Object *o) {
     s32 inLoop = TRUE;
 
+    //print_text_fmt_int(20, 20, "action timer %d", gMarioState->actionTimer);
+    //print_text_fmt_int(20, 40, "action state %d", gMarioState->actionState);
+
     if (gMarioState->action) {
         gMarioState->marioObj->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
         mario_reset_bodystate(gMarioState);

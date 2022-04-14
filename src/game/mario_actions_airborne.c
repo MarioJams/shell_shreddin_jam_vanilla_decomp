@@ -657,11 +657,69 @@ s32 act_riding_shell_air(struct MarioState *m) {
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
     set_mario_animation(m, MARIO_ANIM_JUMP_RIDING_SHELL);
 
+    //transfer the timer from the previous action
+    if (m->actionArg > 0) {
+        m->actionTimer = m->actionArg;
+        m->actionArg = 0;
+    }
+    else {
+        //double jump
+        //putting this in an else statement ensures that the same A press is not used for the double jump
+        if (m->input & INPUT_A_PRESSED && m->actionState != 2 && m->actionState != 3) {
+            m->actionState = 2;
+        m->vel[1] = 60.0f;
+        m->particleFlags |= PARTICLE_MIST_CIRCLE;
+        play_sound(SOUND_GENERAL_SWISH_WATER, m->marioObj->header.gfx.cameraToObject);
+    }
+    }
+
+    m->actionTimer++;
+
+    if (m->input & INPUT_Z_PRESSED && m->actionState != 3) {
+        m->actionState = 3;
+        m->forwardVel *= 0.7f;
+        //the timer is set to 40 so that the dash will be ready when you get back to the ground
+        m->actionTimer = 40;
+
+        play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
+    }
+
+    if (m->actionState == 3) {
+        //stall in the air for a bit
+        if (m->actionTimer < 45) {
+            m->marioObj->header.gfx.angle[1] += 0x3333;
+        }
+        if (m->actionTimer < 50) {
+        m->vel[1] = 12.0f;
+        }
+        //shoot downward
+        if (m->actionTimer == 50) {
+        m->vel[1] = -90.0f;
+        }
+    }
+
+    //manual deceleration in air during a dash
+    if (m->forwardVel < 128.0f && m->forwardVel > 64.0f) { 
+        m->forwardVel -= (f32) m->actionTimer / 15.0f;
+    }
+    if (m->forwardVel > 128.0f) {
+        m->forwardVel = 128.0f;
+    }
+
+    //accelerate downwards during pound
+    if (m->actionState == 3) {
+        m->vel[1] -= 10.0f;
+    }
+
     update_air_without_turn(m);
 
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
-            set_mario_action(m, ACT_RIDING_SHELL_GROUND, 1);
+            if (m->actionState == 3) {
+                m->particleFlags |= PARTICLE_MIST_CIRCLE;
+            play_sound(SOUND_OBJ_POUNDING1, m->marioObj->header.gfx.cameraToObject);
+            }
+            set_mario_action(m, ACT_RIDING_SHELL_GROUND, m->actionTimer);
             break;
 
         case AIR_STEP_HIT_WALL:
