@@ -1,4 +1,11 @@
 act_riding_shell_ground
+act_riding_shell_air
+act_water_shell_swimming
+act_hold_water_jump
+check_water_jump
+update_swimming_speed
 update_shell_speed
+set_water_plunge_action
 perform_air_step
+bhv_koopa_shell_loop
 squish_mario_model

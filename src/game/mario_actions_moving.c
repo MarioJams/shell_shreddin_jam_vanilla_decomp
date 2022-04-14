@@ -1219,12 +1219,24 @@ s32 act_riding_shell_ground(struct MarioState *m) {
         m->actionArg = 0;
     }
 
+    //this is in place for the transition from water shell to ground shell
+    if (!m->riddenObj) {
+        m->faceAngle[0] = 0;
+        m->faceAngle[2] = 0;
+        m->interactObj = spawn_object(m->marioObj, MODEL_KOOPA_SHELL, bhvKoopaShell);
+            m->usedObj = m->interactObj;
+            m->riddenObj = m->interactObj;
+
+            attack_object(m->interactObj, 0x40);
+    }
+
     m->actionTimer++;
 
     if (m->input & INPUT_A_PRESSED) {
         return set_mario_action(m, ACT_RIDING_SHELL_JUMP, m->actionTimer);
     }
 
+    //shell dash
     if (m->input & INPUT_B_PRESSED && m->actionState != 1 && m->actionTimer >= 60) {
         m->particleFlags |= PARTICLE_VERTICAL_STAR;
         play_sound(SOUND_OBJ_CANNON4, m->marioObj->header.gfx.cameraToObject);
@@ -1239,7 +1251,8 @@ s32 act_riding_shell_ground(struct MarioState *m) {
         m->actionTimer = 0;
     }
 
-    if (m->input & INPUT_Z_PRESSED) {
+    //get off the shell
+    if (m->input & INPUT_Z_DOWN && m->input & INPUT_B_PRESSED) {
         mario_stop_riding_object(m);
         if (m->forwardVel < 24.0f) {
             mario_set_forward_vel(m, 24.0f);
@@ -1262,6 +1275,18 @@ s32 act_riding_shell_ground(struct MarioState *m) {
             m->particleFlags |= PARTICLE_VERTICAL_STAR;
             set_mario_action(m, ACT_BACKWARD_GROUND_KB, 0);
             break;
+    }
+
+    //if mario presses Z over a water surface, switch to the water shell
+    if (m->floor == &gWaterSurfacePseudoFloor && m->input & INPUT_Z_PRESSED) {
+        if (m->riddenObj != NULL) {
+        m->riddenObj->oInteractStatus = INT_STATUS_STOP_RIDING;
+        m->riddenObj = NULL;
+    }
+        m->usedObj = spawn_object(m->marioObj, MODEL_KOOPA_SHELL, bhvKoopaShellUnderwater);
+        mario_grab_used_object(m);
+        m->marioBodyState->grabPos = GRAB_POS_LIGHT_OBJ;
+        set_mario_action(m, ACT_WATER_SHELL_SWIMMING, m->forwardVel);
     }
 
     tilt_body_ground_shell(m, startYaw);

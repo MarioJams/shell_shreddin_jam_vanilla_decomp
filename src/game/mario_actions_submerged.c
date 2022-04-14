@@ -231,6 +231,11 @@ static void update_swimming_speed(struct MarioState *m, f32 decelThreshold) {
     f32 buoyancy = get_buoyancy(m);
     f32 maxSpeed = 28.0f;
 
+    //if mario is using a shell he can go much faster
+    if (m->heldObj) {
+        maxSpeed = 130.0f;
+    }
+
     if (m->action & ACT_FLAG_STATIONARY) {
         m->forwardVel -= 2.0f;
     }
@@ -501,7 +506,10 @@ static s32 check_water_jump(struct MarioState *m) {
             if (m->heldObj == NULL) {
                 return set_mario_action(m, ACT_WATER_JUMP, 0);
             } else {
-                return set_mario_action(m, ACT_HOLD_WATER_JUMP, 0);
+                m->actionState = 4;
+                play_sound(SOUND_ACTION_UNKNOWN430, m->marioObj->header.gfx.cameraToObject);
+                m->particleFlags |= PARTICLE_WATER_SPLASH;
+                return set_mario_action(m, ACT_HOLD_WATER_JUMP, 4);
             }
         }
     }
@@ -746,25 +754,67 @@ static s32 act_hold_flutter_kick(struct MarioState *m) {
 }
 
 static s32 act_water_shell_swimming(struct MarioState *m) {
+
+    //transfer forward velocity when entering water
+    if (m->actionArg > 0) {
+        m->forwardVel = m->actionArg;
+        m->actionArg = 0;
+    }
+
+    if (!m->heldObj) {
+        m->usedObj = spawn_object(m->marioObj, MODEL_KOOPA_SHELL, bhvKoopaShellUnderwater);
+        mario_grab_used_object(m);
+        m->marioBodyState->grabPos = GRAB_POS_LIGHT_OBJ;
+    }
+
+
     if (m->marioObj->oInteractStatus & INT_STATUS_MARIO_DROP_OBJECT) {
         return drop_and_set_mario_action(m, ACT_WATER_IDLE, 0);
     }
 
-    if (m->input & INPUT_B_PRESSED) {
-        return set_mario_action(m, ACT_WATER_THROW, 0);
+    //underwater shell dash
+    if (m->input & INPUT_B_PRESSED && m->actionState != 5) {
+        //return set_mario_action(m, ACT_WATER_THROW, 0);
+        m->particleFlags |= PARTICLE_VERTICAL_STAR;
+        play_sound(SOUND_OBJ_CANNON4, m->marioObj->header.gfx.cameraToObject);
+        m->actionState = 5;
+        m->forwardVel *= 2;
     }
 
+    //water shell timer is really stupid tbh
+/*
     if (m->actionTimer++ == 240) {
         m->heldObj->oInteractStatus = INT_STATUS_STOP_RIDING;
         m->heldObj = NULL;
         stop_shell_music();
         set_mario_action(m, ACT_FLUTTER_KICK, 0);
     }
+    */
 
-    m->forwardVel = approach_f32(m->forwardVel, 30.0f, 2.0f, 1.0f);
+   
+
+   //hold Z to accelerate while not dashing
+   if (m->forwardVel <= 40.0f) {
+       if (m->actionState == 5) {
+           m->actionState = 0;
+       }
+   if (m->input & INPUT_Z_DOWN) {
+    m->forwardVel = approach_f32(m->forwardVel, 40.0f, 2.0f, 1.0f);
+   }
+   else {
+    m->forwardVel = approach_f32(m->forwardVel, 0.0f, 2.0f, 0.2f);
+   }
+    }
+    //if dashing, spin mario and approach the normal speed faster
+    else {
+        m->forwardVel = approach_f32(m->forwardVel, 40.0f, 2.0f, 1.0f);
+        //m->marioObj->header.gfx.angle[2] += 0x2000;
+    }
 
     play_swimming_noise(m);
     set_mario_animation(m, MARIO_ANIM_FLUTTERKICK_WITH_OBJ);
+    //check to see if mario wants to do the spin jump out of the water
+    check_water_jump(m);  
     common_swimming_step(m, 0x012C);
 
     return FALSE;

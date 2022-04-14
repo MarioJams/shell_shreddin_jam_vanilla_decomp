@@ -650,7 +650,8 @@ s32 perform_air_step(struct MarioState *m, u32 stepArg) {
 
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
 
-    if (m->action != ACT_RIDING_SHELL_JUMP && m->action != ACT_RIDING_SHELL_FALL && m->actionState != 3) {
+    //stop copying rotations if mario is doing a shell ground pound or a water shell spin.
+    if (m->action != ACT_RIDING_SHELL_JUMP && m->action != ACT_RIDING_SHELL_FALL && m->action != ACT_HOLD_WATER_JUMP && m->actionState != 3 && m->actionState != 4) {
     vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
     }
 
