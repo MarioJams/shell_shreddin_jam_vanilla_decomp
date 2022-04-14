@@ -709,6 +709,9 @@ s32 act_riding_shell_air(struct MarioState *m) {
     //accelerate downwards during pound
     if (m->actionState == 3) {
         m->vel[1] -= 10.0f;
+        if (m->vel[1] < -90.0f) {
+            m->marioObj->header.gfx.scale[1] = 1.0f + (-1.0f * m->vel[1] / 180.0f);
+        }
     }
 
     update_air_without_turn(m);

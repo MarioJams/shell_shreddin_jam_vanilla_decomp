@@ -1,2 +1,4 @@
 act_riding_shell_ground
 update_shell_speed
+perform_air_step
+squish_mario_model
