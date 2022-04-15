@@ -1189,13 +1189,14 @@ s32 set_water_plunge_action(struct MarioState *m) {
         set_camera_mode(m->area->camera, CAMERA_MODE_WATER_SURFACE, 1);
     }
 
-    if (m->actionState == 4 && m->heldObj) {
+    if (m->actionState == 4 || m->actionState == 6 && m->heldObj) {
         //do the water plunge stuff without entering the water plunge action
         play_sound(SOUND_ACTION_UNKNOWN430, m->marioObj->header.gfx.cameraToObject);
         if (m->peakHeight - m->pos[1] > 1150.0f) {
             play_sound(SOUND_MARIO_HAHA_2, m->marioObj->header.gfx.cameraToObject);
         }
-
+    m->pos[1] -= 200.0f;
+    m->vel[1] = -30.0f;
         m->particleFlags |= PARTICLE_WATER_SPLASH;
 #if ENABLE_RUMBLE
         if (m->prevAction & ACT_FLAG_AIR) {

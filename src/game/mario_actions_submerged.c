@@ -496,8 +496,8 @@ static void play_swimming_noise(struct MarioState *m) {
 
 static s32 check_water_jump(struct MarioState *m) {
     s32 probe = (s32)(m->pos[1] + 1.5f);
-
-    if (m->input & INPUT_A_PRESSED) {
+    
+    if (m->input & INPUT_A_PRESSED || m->action == ACT_WATER_SHELL_SWIMMING) {
         if (probe >= m->waterLevel - 80 && m->faceAngle[0] >= 0 && m->controller->stickY < -60.0f) {
             vec3s_set(m->angleVel, 0, 0, 0);
 
@@ -506,6 +506,13 @@ static s32 check_water_jump(struct MarioState *m) {
             if (m->heldObj == NULL) {
                 return set_mario_action(m, ACT_WATER_JUMP, 0);
             } else {
+                //mario is doing a water dash and going WAY too fast. cut his speed a bit
+                if (m->actionState == 5) {
+                    m->forwardVel *= 0.6f;
+                    if (m->forwardVel < 40.0f) {
+                        m->forwardVel = 40.0f;
+                    }
+                }
                 m->actionState = 4;
                 play_sound(SOUND_ACTION_UNKNOWN430, m->marioObj->header.gfx.cameraToObject);
                 m->particleFlags |= PARTICLE_WATER_SPLASH;
@@ -767,6 +774,8 @@ static s32 act_water_shell_swimming(struct MarioState *m) {
         m->marioBodyState->grabPos = GRAB_POS_LIGHT_OBJ;
     }
 
+    m->actionTimer += 1;
+
 
     if (m->marioObj->oInteractStatus & INT_STATUS_MARIO_DROP_OBJECT) {
         return drop_and_set_mario_action(m, ACT_WATER_IDLE, 0);
@@ -793,19 +802,20 @@ static s32 act_water_shell_swimming(struct MarioState *m) {
 
    
 
-   //hold Z to accelerate while not dashing
    if (m->forwardVel <= 40.0f) {
        if (m->actionState == 5) {
            m->actionState = 0;
        }
+    //braking
    if (m->input & INPUT_Z_DOWN) {
-    m->forwardVel = approach_f32(m->forwardVel, 40.0f, 2.0f, 1.0f);
+        m->forwardVel = approach_f32(m->forwardVel, 0.0f, 2.0f, 0.2f);
    }
+   //normal speed
    else {
-    m->forwardVel = approach_f32(m->forwardVel, 0.0f, 2.0f, 0.2f);
+       m->forwardVel = approach_f32(m->forwardVel, 40.0f, 2.0f, 1.0f);
    }
     }
-    //if dashing, spin mario and approach the normal speed faster
+    //if dashing, approach the normal speed faster
     else {
         m->forwardVel = approach_f32(m->forwardVel, 40.0f, 2.0f, 1.0f);
         //m->marioObj->header.gfx.angle[2] += 0x2000;
@@ -814,7 +824,9 @@ static s32 act_water_shell_swimming(struct MarioState *m) {
     play_swimming_noise(m);
     set_mario_animation(m, MARIO_ANIM_FLUTTERKICK_WITH_OBJ);
     //check to see if mario wants to do the spin jump out of the water
+    if (m->actionTimer > 5) {
     check_water_jump(m);  
+    }
     common_swimming_step(m, 0x012C);
 
     return FALSE;
