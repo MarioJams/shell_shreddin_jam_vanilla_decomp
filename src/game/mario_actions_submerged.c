@@ -513,6 +513,9 @@ static s32 check_water_jump(struct MarioState *m) {
                         m->forwardVel = 40.0f;
                     }
                 }
+                if (m->forwardVel > 50.0f) {
+                    m->forwardVel = 50.0f;
+                }
                 m->actionState = 4;
                 play_sound(SOUND_ACTION_UNKNOWN430, m->marioObj->header.gfx.cameraToObject);
                 m->particleFlags |= PARTICLE_WATER_SPLASH;
