@@ -766,8 +766,8 @@ static s32 act_hold_flutter_kick(struct MarioState *m) {
 static s32 act_water_shell_swimming(struct MarioState *m) {
 
     //transfer forward velocity when entering water
-    if (m->actionArg > 0) {
-        m->forwardVel = m->actionArg;
+    if (((s32)m->actionArg > 0)) {
+        m->forwardVel = ((s32)m->actionArg);
         m->actionArg = 0;
     }
 

@@ -1290,13 +1290,13 @@ s32 act_riding_shell_ground(struct MarioState *m) {
     //if mario presses Z over a water surface, switch to the water shell
     if (m->floor == &gWaterSurfacePseudoFloor && m->input & INPUT_Z_PRESSED) {
         if (m->riddenObj != NULL) {
-        m->riddenObj->oInteractStatus = INT_STATUS_STOP_RIDING;
-        m->riddenObj = NULL;
-    }
+            m->riddenObj->oInteractStatus = INT_STATUS_STOP_RIDING;
+            m->riddenObj = NULL;
+        }
         m->usedObj = spawn_object(m->marioObj, MODEL_KOOPA_SHELL, bhvKoopaShellUnderwater);
         mario_grab_used_object(m);
         m->marioBodyState->grabPos = GRAB_POS_LIGHT_OBJ;
-        set_mario_action(m, ACT_WATER_SHELL_SWIMMING, m->forwardVel);
+        set_mario_action(m, ACT_WATER_SHELL_SWIMMING, (u32)(s32)m->forwardVel);
     }
 
     tilt_body_ground_shell(m, startYaw);
