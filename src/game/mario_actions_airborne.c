@@ -741,7 +741,7 @@ s32 act_riding_shell_air(struct MarioState *m) {
                     play_sound(SOUND_ACTION_UNKNOWN430, m->marioObj->header.gfx.cameraToObject);
                     m->particleFlags |= PARTICLE_WATER_SPLASH;
                     //changes action but doesnt spawn a shell. the shell will spawn in the action itself.
-                    set_mario_action(m, ACT_WATER_SHELL_SWIMMING, m->forwardVel);
+                    set_mario_action(m, ACT_WATER_SHELL_SWIMMING, (u32)(s32)m->forwardVel);
                 } else {
                     m->particleFlags |= PARTICLE_MIST_CIRCLE;
                     play_sound(SOUND_OBJ_POUNDING1, m->marioObj->header.gfx.cameraToObject);

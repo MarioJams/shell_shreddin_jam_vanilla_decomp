@@ -1189,7 +1189,7 @@ s32 set_water_plunge_action(struct MarioState *m) {
         set_camera_mode(m->area->camera, CAMERA_MODE_WATER_SURFACE, 1);
     }
 
-    if (m->actionState == 4 || m->actionState == 6 && m->heldObj) {
+    if (m->actionState == 4 || (m->actionState == 6 && m->heldObj)) {
         //do the water plunge stuff without entering the water plunge action
         play_sound(SOUND_ACTION_UNKNOWN430, m->marioObj->header.gfx.cameraToObject);
         if (m->peakHeight - m->pos[1] > 1150.0f) {
@@ -1204,7 +1204,7 @@ s32 set_water_plunge_action(struct MarioState *m) {
         }
 #endif
 //cut straight to water shell swimming to avoid being slowed down and action transition hell
-            return set_mario_action(m, ACT_WATER_SHELL_SWIMMING, m->forwardVel);
+            return set_mario_action(m, ACT_WATER_SHELL_SWIMMING, (u32)(s32)m->forwardVel);
         }
     return set_mario_action(m, ACT_WATER_PLUNGE, 0);
         
