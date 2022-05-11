@@ -759,6 +759,18 @@ s32 act_riding_shell_air(struct MarioState *m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+            case AIR_STEP_SHELL_ENTERED_WATER:
+            if (m->riddenObj != NULL) {
+                m->riddenObj->oInteractStatus = INT_STATUS_STOP_RIDING;
+                m->riddenObj = NULL;
+            }
+            play_sound(SOUND_ACTION_UNKNOWN430, m->marioObj->header.gfx.cameraToObject);
+            m->particleFlags |= PARTICLE_WATER_SPLASH;
+            m->pos[1] -= 50;
+            //changes action but doesnt spawn a shell. the shell will spawn in the action itself.
+            set_mario_action(m, ACT_WATER_SHELL_SWIMMING, (u32)(s32)m->forwardVel);
+            break;
     }
 
     m->marioObj->header.gfx.pos[1] += 42.0f;
